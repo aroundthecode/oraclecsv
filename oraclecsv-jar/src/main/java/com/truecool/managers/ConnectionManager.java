@@ -3,6 +3,7 @@ package com.truecool.managers;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -127,7 +128,7 @@ public class ConnectionManager {
 			if (element.equals("NULL"))
 				statement.setString(index, null);
 			else if( type.equals("java.math.BigDecimal") ) {
-				statement.setInt(index, Integer.parseInt(element));
+				statement.setBigDecimal(index, new BigDecimal(element));
 			} 
 			else if ( type.equals("java.lang.String") ) {
 				statement.setString(index, element);

@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -64,10 +65,18 @@ public class ExportManagerTest {
 		try {
 			ExportManager exportManager = new ExportManager(new OracleDriver(), SOURCE_DB_URL);
 			List<String> tableList = getTableList(SOURCE_DB_USER);
+			Date mainStart = new Date();
 			for (String tableName : tableList) {
-				System.out.println("Exporting: " + tableName);
+				Date start = new Date(); 
+				System.out.print("Exporting: " + tableName);
 				exportManager.exportData(tableName, WORK_PATH + "/" + tableName + ".csv", DATE_FORMAT); 
+				Date end = new Date();
+				System.out.println(" => it took " + (end.getTime() - start.getTime()) + " msecs");
 			}
+			Date mainEnd = new Date();
+			System.out.println("Export completed => it took " + 
+				(mainEnd.getTime() - mainStart.getTime()) + " msecs\n");
+
 		} catch (Exception e){
 			e.printStackTrace();
 			Assert.fail("Error exporting DB: " + e.getMessage());
@@ -82,13 +91,20 @@ public class ExportManagerTest {
 			// load DB
 			LoaderManager loaderManager = new LoaderManager(new OracleDriver(), SOURCE_DB_URL);
 			List<String> fileList = fileList(WORK_PATH);
+			Date mainStart = new Date();
 			for (String fileName : fileList) {
 				if (fileName.endsWith(".csv")) {
 					String tableName = fileName.replace(".csv", "");
-					System.out.println("Importing: " + tableName);
+					Date start = new Date(); 
+					System.out.print("Importing: " + tableName);
 					loaderManager.loadData(tableName, WORK_PATH + "/" + fileName, true, DATE_FORMAT); 
+					Date end = new Date();
+					System.out.println(" => it took " + (end.getTime() - start.getTime()) + " msecs");
 				}
 			}
+			Date mainEnd = new Date();
+			System.out.println("Import completed => it took " + 
+				(mainEnd.getTime() - mainStart.getTime()) + " msecs\n");
 			
 		} catch (Exception e){
 			e.printStackTrace();
