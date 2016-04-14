@@ -4,25 +4,33 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Driver;
 
+/**
+ * Loads data from CSV into DB tables
+ * 
+ * @author Alberto Lagna
+ *
+ */
 public class LoaderManager {
 
+	private ConnectionManager connectionManager = new ConnectionManager();
 
+	public LoaderManager(Driver driver, String url) throws Exception {
+		connectionManager.setupConnection(driver, url);
+	}
 
-	public static void loadData(Driver driver, String url, String table, String filePath, boolean truncate,String dateformat) throws Exception {
+	public void loadData(String table, String filePath, boolean truncate, String dateformat) throws Exception {
 		BufferedReader reader = null;
 
 		try {
-
-			ConnectionManager.setupConnection( driver,url );
 			reader = new BufferedReader(new FileReader(filePath));
 
 			if (truncate) {
-				ConnectionManager.performTruncate(table);
+				connectionManager.performTruncate(table);
 			}
 
 			String line = null;
 			while ((line = reader.readLine()) != null) {
-				ConnectionManager.handleLine(table, line,dateformat);
+				connectionManager.handleLine(table, line, dateformat);
 			}
 		} finally {
 			if (reader != null) {

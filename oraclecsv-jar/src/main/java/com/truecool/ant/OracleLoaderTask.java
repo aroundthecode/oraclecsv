@@ -63,9 +63,9 @@ public class OracleLoaderTask extends Task {
 
 
 	public void execute() throws BuildException {
-
 		try {
-			LoaderManager.loadData(new OracleDriver(), getDbmsuri(), getTable(), getFilepath(), isTruncate(), getDateformat() );
+			LoaderManager loaderManager = new LoaderManager(new OracleDriver(), getDbmsuri());
+			loaderManager.loadData(getTable(), getFilepath(), isTruncate(), getDateformat() );
 		} catch (Exception e) {
 			throw new BuildException(e);
 		} 

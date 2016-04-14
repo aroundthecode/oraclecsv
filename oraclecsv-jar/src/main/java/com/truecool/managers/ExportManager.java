@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.ResultSetMetaData;
 import java.sql.Timestamp;
@@ -19,19 +20,39 @@ import oracle.sql.TIMESTAMP;
 import com.truecool.sql.GenericSQLReader;
 import com.truecool.utils.StringUtils;
 
+/**
+ * Manages the export of the DB
+ * TODO handle connectionManager.cleanupConnection()
+ * 
+ * @author Alberto Lagna
+ *
+ */
 public class ExportManager {
 
+	private ConnectionManager connectionManager = new ConnectionManager();
+	private Connection connection;
 	
 
-	public static void exportData(Driver driver, String url, String table, String filePath,String dateformat) throws Exception {
+	public ExportManager(Driver driver, String url) throws Exception {
+		connectionManager.setupConnection(driver, url);
+		connection = connectionManager.getConnection();
+	}
+
+
+	/**
+	 * Exports the data from the table to the filePath
+	 * @param table
+	 * @param filePath
+	 * @param dateformat
+	 * @throws Exception
+	 */
+	public void exportData(String table, String filePath, String dateformat) throws Exception {
 		BufferedWriter writer = null;
 		ResultSetMetaData metaData = null;
 
 		try {
 
-			ConnectionManager.setupConnection( driver,url );
-
-			GenericSQLReader reader = new GenericSQLReader(ConnectionManager.getConnection());
+			GenericSQLReader reader = new GenericSQLReader(connection);
 
 			List data = reader.getData("SELECT * FROM " + table);
 
@@ -75,11 +96,11 @@ public class ExportManager {
 				writer.flush();
 				writer.close();
 			}
-			ConnectionManager.cleanupConnection();
+//			connectionManager.cleanupConnection();
 		}
 	}
 
-	private static String handleClob(CLOB value, int rowIndex, int colIndex) throws Exception {
+	private String handleClob(CLOB value, int rowIndex, int colIndex) throws Exception {
 		String colValue = "clobdata-r" + rowIndex + "c" + colIndex + ".txt";
 		File clobDataFile = new File(colValue);
 
@@ -109,7 +130,7 @@ public class ExportManager {
 		return "CLOB=" + colValue;
 	}
 
-	private static String handleTimeStamp(Timestamp date, String dateformat) {
+	private String handleTimeStamp(Timestamp date, String dateformat) {
 		String formattedDate = null;
 		SimpleDateFormat dateFormat = new SimpleDateFormat(dateformat);
 		formattedDate = dateFormat.format(new java.util.Date(date.getTime()));

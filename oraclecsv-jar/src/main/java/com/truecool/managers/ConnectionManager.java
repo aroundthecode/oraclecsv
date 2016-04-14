@@ -11,7 +11,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 
 //import oracle.jdbc.OraclePreparedStatement;
@@ -22,19 +21,24 @@ import org.apache.tools.ant.BuildException;
 
 import com.truecool.utils.StringUtils;
 
+/**
+ * Manages the connection to the DB
+ * 
+ * @author Alberto Lagna
+ *
+ */
 public class ConnectionManager {
 
-	private static Connection connection = null;
+	private Connection connection = null;
 	
-	private static String[] colTypes = null;
+	private String[] colTypes = null;
 
-	public static void setupConnection(Driver driver, String url) throws ClassNotFoundException, SQLException {
-		
+	public void setupConnection(Driver driver, String url) throws ClassNotFoundException, SQLException {
 		DriverManager.registerDriver(driver);
 		connection = DriverManager.getConnection(url);
 	}
 
-	public static void cleanupConnection() {
+	public void cleanupConnection() {
 		
 		if (getConnection() != null) {
 			try {
@@ -48,11 +52,11 @@ public class ConnectionManager {
 		}
 	}
 
-	public static Connection getConnection() {
+	public Connection getConnection() {
 		return connection;
 	}
 
-	private static String prepareSql( String table, String line) throws Exception {
+	private String prepareSql( String table, String line) throws Exception {
 		PreparedStatement statement = null;
 		ResultSetMetaData metaData = null;
 		String metaDataSql = "SELECT * FROM " + table + " WHERE 1 = 2";
@@ -99,7 +103,7 @@ public class ConnectionManager {
 		return sql;
 	}
 
-	public static void handleLine( String table, String line,String dateformat) throws Exception {
+	public void handleLine( String table, String line,String dateformat) throws Exception {
 		String sql = prepareSql( table, line);
 		PreparedStatement statement = prepareStatement( sql, line,dateformat);
 		statement.execute();
@@ -107,7 +111,7 @@ public class ConnectionManager {
 		statement.close();
 	}
 
-	private static PreparedStatement prepareStatement( String sql, String line, String dateformat) throws Exception {
+	private PreparedStatement prepareStatement( String sql, String line, String dateformat) throws Exception {
 		PreparedStatement statement = connection.prepareStatement(sql);
 
 		StringTokenizer tokenizer = new StringTokenizer(line, ",");
@@ -120,7 +124,9 @@ public class ConnectionManager {
 			String type = colTypes[index-1];
 //			System.out.println(type + " - " + element );
 			
-			if( type.equals("java.math.BigDecimal") ) {
+			if (element.equals("NULL"))
+				statement.setString(index, null);
+			else if( type.equals("java.math.BigDecimal") ) {
 				statement.setInt(index, Integer.parseInt(element));
 			} 
 			else if ( type.equals("java.lang.String") ) {
@@ -159,7 +165,7 @@ public class ConnectionManager {
 		return statement;
 	}
 
-	public static void performTruncate(String table ) throws SQLException {
+	public void performTruncate(String table ) throws SQLException {
 		String sql = "TRUNCATE TABLE " + table;
 		Statement statement = connection.createStatement();
 		statement.executeUpdate(sql);

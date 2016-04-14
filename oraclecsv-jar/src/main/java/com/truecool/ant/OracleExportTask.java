@@ -53,7 +53,8 @@ public class OracleExportTask extends Task {
 
 	public void execute() throws BuildException {
 		try {
-			ExportManager.exportData( new OracleDriver(), getDbmsuri(), getTable(), getFilepath(), getDateformat());
+			ExportManager exportManager = new ExportManager(new OracleDriver(), getDbmsuri());
+			exportManager.exportData(getTable(), getFilepath(), getDateformat());
 		} catch (Exception e) {
 			throw new BuildException(e);
 		} 
