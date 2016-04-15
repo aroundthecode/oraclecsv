@@ -8,9 +8,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Driver;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.truecool.sql.GenericSQLReader;
 
@@ -22,12 +26,7 @@ import com.truecool.sql.GenericSQLReader;
  */
 public class LoaderManager extends BaseManager{
 
-	private static String START_QRY = "select 'ALTER TABLE '||substr(c.table_name,1,35)|| ' ";
-	private static String END_QRY = 
-		" CONSTRAINT '||constraint_name||' ;' from user_constraints c, user_tables u where c.table_name = u.table_name;";
-	private static String ENABLE_QRY = START_QRY + "ENABLE" + END_QRY;
-	private static String DISABLE_QRY = START_QRY + "DISABLE" + END_QRY;
-	
+	private static final String CONSTRAINT_QRY = "select u.table_name, c.constraint_name from user_constraints c, user_tables u where c.table_name = u.table_name";
 
 	/**
 	 * Constructor with mandatory fields
@@ -69,19 +68,18 @@ public class LoaderManager extends BaseManager{
 					System.out.print("Importing: " + tableName);
 					loadData(tableName, filePath + "/" + fileName, true, dateFormat); 
 					Date end = new Date();
-					System.out.println(" => it took " + (end.getTime() - start.getTime()) + " msecs");
+					logDebug(" => it took " + (end.getTime() - start.getTime()) + " msecs");
 				}
 			}
 			enableConstraints();
 			
 			Date mainEnd = new Date();
-			System.out.println("------------------------------------------");
-			System.out.println("Import completed => it took " + 
+			logDebug("------------------------------------------");
+			logDebug("Import completed => it took " + 
 				(mainEnd.getTime() - mainStart.getTime()) + " msecs\n");
 			
 		} catch (Exception e){
-			e.printStackTrace();
-			System.err.println("Error loading DB: " + e.getMessage());
+			logError("Error loading DB: " + e.getMessage(), e);
 		}
 		closeConnection();
 	}
@@ -90,26 +88,55 @@ public class LoaderManager extends BaseManager{
 	 * Enable constraints (after the load of all the table content)
 	 */
 	private void enableConstraints() {
-//		manageConstraints(ENABLE_QRY);
+		logDebug("Enabling constraints: " + CONSTRAINT_QRY);
+		manageConstraints("ENABLE");
 	}
 
 	/**
-	 * Either enables or disables constraints
+	 * Either enables or disables constraints.
+	 * 
+	 * In case of enabling constraints, it can happen that we are trying to enable constraints that depends
+	 * on other constraints. In this case the further cannot be done before the latter are done: usually a
+	 * FK depending on PK. To overcome this problem we keep aside the enable constraint that failed and we retry it
+	 * later
+	 * 
 	 * @param cmd
 	 */
 	private void manageConstraints(String cmd) {
 		GenericSQLReader reader = new GenericSQLReader(connectionManager.getConnection());
-		List data = reader.getData(ENABLE_QRY);
-		for (int rowIndex = 0; rowIndex < data.size(); rowIndex++) {
-			System.out.println(data.get(rowIndex));
+		List data = reader.getData(CONSTRAINT_QRY);
+		
+		int n=1;
+		while(!data.isEmpty()){
+			logDebug("Constraint loop n " + n++);
+			for (Iterator<Object> i=data.iterator(); i.hasNext(); ) {
+				Map row = (Map) i.next();
+				String tableName = (String)row.get("TABLE_NAME");
+				String constraintName = (String)row.get("CONSTRAINT_NAME");
+				
+				String sql = "ALTER TABLE " + tableName + " " + cmd + " CONSTRAINT " + constraintName;
+				Statement statement;
+				try {
+					statement = connection.createStatement();
+					statement.executeUpdate(sql);
+	//				logDebug(sql);
+					statement.close();
+					i.remove();
+				} catch (SQLException e) {
+					logError("  Error in executing " + cmd + " of constraint " + sql + ":\n  " + e.getMessage().replace("\n", "") );
+					logError("  Retrying when the other constraints are set\n");
+				}
+			}
 		}
+		logDebug("Constraint " + cmd + " ended");
 	}
 
 	/**
 	 * Disable constraints (to load all the table content)
 	 */
 	private void disableConstraints() {
-//		manageConstraints(DISABLE_QRY);
+		logDebug("Disabling constraints: " + CONSTRAINT_QRY);
+		manageConstraints("DISABLE");
 	}
 	
 

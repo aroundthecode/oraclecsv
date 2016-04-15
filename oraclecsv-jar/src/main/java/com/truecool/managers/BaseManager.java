@@ -55,6 +55,17 @@ public abstract class BaseManager {
 	protected void closeConnection() {
 		connectionManager.cleanupConnection();
 	}
+	
+	protected void logDebug(String msg){
+		System.out.println(msg);
+	}
+	protected void logError(String msg){
+		System.err.println(msg);
+	}
+	protected void logError(String msg, Exception e){
+		System.err.println(msg);
+//		e.printStackTrace();
+	}
 
 
 }

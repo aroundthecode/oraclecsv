@@ -26,9 +26,6 @@ import oracle.sql.TIMESTAMP;
 /**
  * Manages the export of the DB
  * 
- * TODO handle connectionManager.cleanupConnection()
- * TODO Error exporting DB: ORA-01000: maximum open cursors exceeded
- * 
  * @author Alberto Lagna
  *
  */
@@ -72,16 +69,15 @@ public class ExportManager extends BaseManager{
 				System.out.print("Exporting: " + tableName);
 				exportData(tableName, targetPath + "/" + tableName + ".csv", dateFormat, false); 
 				Date end = new Date();
-				System.out.println(" => it took " + (end.getTime() - start.getTime()) + " msecs");
+				logDebug(" => it took " + (end.getTime() - start.getTime()) + " msecs");
 			}
 			Date mainEnd = new Date();
-			System.out.println("------------------------------------------");
-			System.out.println("Export completed => it took " + 
+			logDebug("------------------------------------------");
+			logDebug("Export completed => it took " + 
 				(mainEnd.getTime() - mainStart.getTime()) + " msecs\n");
 
 		} catch (Exception e){
-			e.printStackTrace();
-			System.err.println("Error exporting DB: " + e.getMessage());
+			logError("Error exporting DB: " + e.getMessage(), e);
 		}
 		closeConnection();
 	}
@@ -121,7 +117,7 @@ public class ExportManager extends BaseManager{
 		List data = reader.getData("SELECT owner, table_name FROM all_tables ORDER BY table_name");
 		if (data != null && data.size() > 0) {
 			for (int rowIndex = 0; rowIndex < data.size(); rowIndex++) {
-				Map row = (Map) data.get(rowIndex);//				System.out.println(row);
+				Map row = (Map) data.get(rowIndex);//				logDebug(row);
 				String owner = row.get("OWNER").toString();
 				String tableName = row.get("TABLE_NAME").toString();
 				if (owner.equals(username)){
