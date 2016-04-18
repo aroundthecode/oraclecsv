@@ -23,17 +23,30 @@ import org.apache.tools.ant.BuildException;
 import com.truecool.utils.StringUtils;
 
 /**
- * Manages the connection to the DB
+ * Manages the connection to the DB and uses it.
  * 
  * @author Alberto Lagna
  *
  */
 public class ConnectionManager {
 
-	private Connection connection = null;
-	
+	protected Connection connection = null;
 	private String[] colTypes = null;
 
+	/**
+	 * Constructor used in case the connection is not provided
+	 */
+	public ConnectionManager(){	}
+	
+	/**
+	 * Constructor used in case the connection is provided
+	 * 
+	 * @param connection
+	 */
+	public ConnectionManager(Connection connection){
+		this.connection=connection;
+	}
+	
 	public void setupConnection(Driver driver, String url) throws ClassNotFoundException, SQLException {
 		DriverManager.registerDriver(driver);
 		connection = DriverManager.getConnection(url);
@@ -46,7 +59,8 @@ public class ConnectionManager {
 				if( getConnection().getAutoCommit() == false){
 					getConnection().commit();
 				}
-				getConnection().close();
+				// FIXME understand why it fails
+//				getConnection().close();
 			} catch (SQLException e) {
 				throw new BuildException(e);
 			}
@@ -104,15 +118,15 @@ public class ConnectionManager {
 		return sql;
 	}
 
-	public void handleLine( String table, String line,String dateformat) throws Exception {
+	public void handleLine(String table, String line, String dateformat, String filePath) throws Exception {
 		String sql = prepareSql( table, line);
-		PreparedStatement statement = prepareStatement( sql, line,dateformat);
+		PreparedStatement statement = prepareStatement(sql, line, dateformat, filePath);
 		statement.execute();
 		statement.cancel();
 		statement.close();
 	}
 
-	private PreparedStatement prepareStatement( String sql, String line, String dateformat) throws Exception {
+	private PreparedStatement prepareStatement(String sql, String line, String dateformat, String filePath) throws Exception {
 		PreparedStatement statement = connection.prepareStatement(sql);
 
 		StringTokenizer tokenizer = new StringTokenizer(line, ",");
@@ -147,7 +161,7 @@ public class ConnectionManager {
 			else if ( type.equals("oracle.jdbc.OracleClob") ) {
 				if(element!=null && !element.equalsIgnoreCase("null")){
 				String fileName = element.substring(5);
-				File file = new File(fileName);
+				File file = new File(filePath+"/"+fileName);
 				file.deleteOnExit();
 				InputStream fis = new FileInputStream(file);
 				statement.setAsciiStream(index, fis, (int) file.length());

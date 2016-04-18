@@ -17,9 +17,8 @@ import oracle.jdbc.driver.OracleDriver;
 public class ManagerTest {
 
 	private static final String DATE_FORMAT = "MM/dd/yyyy hh:mm:ss a";
-	private static final String SOURCE_DB_URL = "jdbc:oracle:thin:FP_MYENVLOC/D4t4b4s3_myenvloc@192.168.2.10:1521:XE";
-	private static final String TARGET_DB_URL = SOURCE_DB_URL;
-	private static final String WORK_PATH = "/tmp/DBexport";
+	private static final String SOURCE_DB_URL = "jdbc:oracle:thin:FP_MYENVLOC/vagrant@192.168.2.10:1521:XE";
+	private static final String WORK_PATH = "target/DBexport";
 	
 	@Test
 	public void testExportAndLoadData() {
@@ -53,17 +52,20 @@ public class ManagerTest {
 		// the size is kept as only feature to check
 		System.out.println("Comparing the two exports");
 		for (String fileName : LoaderManager.fileList(WORK_PATH+"bis")) {
-			String path1 = WORK_PATH+"/"+fileName;
-			String path2 = WORK_PATH+"bis" +"/"+fileName;
-			System.out.println(path1 + " <-> " + path2);
+			String sPath1 = WORK_PATH+"/"+fileName;
+			String sPath2 = WORK_PATH+"bis" +"/"+fileName;
+			System.out.println(sPath1 + " <-> " + sPath2);
+			
+			Path path1 = Paths.get(sPath1);
+			Path path2 = Paths.get(sPath2);
 			
 			try {
-				if (!sameContent(Paths.get(new URI("file:///"+path1)), Paths.get(new URI("file:///"+path2))))
+				if (!sameContent(path1.toAbsolutePath(), path2.toAbsolutePath()))
 					System.out.println("   WARNING the two files do not have the same content");
-				Assert.assertTrue("Files " + path1 + " and " + path2 + 
+				Assert.assertTrue("Files " + sPath1 + " and " + sPath2 + 
 					" do not have even the same size ", 
-					sameSize(Paths.get(new URI("file:///"+path1)), Paths.get(new URI("file:///"+path2))));
-			} catch (IOException | URISyntaxException e) {
+					sameSize(path1, path2));
+			} catch (IOException e) {
 				e.printStackTrace();
 				Assert.fail("Error comparing files: " + e.getMessage());
 			}

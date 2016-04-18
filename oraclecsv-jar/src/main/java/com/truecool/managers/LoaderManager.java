@@ -7,6 +7,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -39,6 +40,11 @@ public class LoaderManager extends BaseManager{
 		super(driver, url);
 	}
 	
+	public LoaderManager(Connection connection) throws Exception{
+		super(connection);
+	}
+
+	
 	/**
 	 * Default constructor is not allowed
 	 */
@@ -65,8 +71,8 @@ public class LoaderManager extends BaseManager{
 				if (fileName.endsWith(".csv")) {
 					String tableName = fileName.replace(".csv", "");
 					Date start = new Date(); 
-					System.out.print("Importing: " + tableName);
-					loadData(tableName, filePath + "/" + fileName, true, dateFormat); 
+					logDebug("Importing: " + tableName);
+					loadData(tableName, filePath, true, dateFormat); 
 					Date end = new Date();
 					logDebug(" => it took " + (end.getTime() - start.getTime()) + " msecs");
 				}
@@ -103,7 +109,7 @@ public class LoaderManager extends BaseManager{
 	 * @param cmd
 	 */
 	private void manageConstraints(String cmd) {
-		GenericSQLReader reader = new GenericSQLReader(connectionManager.getConnection());
+		GenericSQLReader reader = new GenericSQLReader(connection);
 		List data = reader.getData(CONSTRAINT_QRY);
 		
 		int n=1;
@@ -162,25 +168,25 @@ public class LoaderManager extends BaseManager{
 	/**
 	 * Loading the data of a table
 	 * 
-	 * @param table
+	 * @param tableName
 	 * @param filePath
 	 * @param truncate
 	 * @param dateformat
 	 * @throws Exception
 	 */
-	public void loadData(String table, String filePath, boolean truncate, String dateformat) throws Exception {
+	public void loadData(String tableName, String filePath, boolean truncate, String dateformat) throws Exception {
 		BufferedReader reader = null;
 
 		try {
-			reader = new BufferedReader(new FileReader(filePath));
+			reader = new BufferedReader(new FileReader(filePath  + "/" + tableName + ".csv"));
 
 			if (truncate) {
-				connectionManager.performTruncate(table);
+				connectionManager.performTruncate(tableName);
 			}
 
 			String line = null;
 			while ((line = reader.readLine()) != null) {
-				connectionManager.handleLine(table, line, dateformat);
+				connectionManager.handleLine(tableName, line, dateformat, filePath);
 			}
 		} finally {
 			if (reader != null) {

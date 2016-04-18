@@ -33,13 +33,17 @@ public class ExportManager extends BaseManager{
 
 
 	/**
-	 * Constructor with the mandatory fields
+	 * Constructor with mandatory fields
 	 * @param driver
 	 * @param url
 	 * @throws Exception
 	 */
 	public ExportManager(Driver driver, String url) throws Exception {
 		super(driver, url);
+	}
+	
+	public ExportManager(Connection connection) throws Exception{
+		super(connection);
 	}
 
 	/**
@@ -67,7 +71,7 @@ public class ExportManager extends BaseManager{
 			for (String tableName : tableList) {
 				Date start = new Date(); 
 				System.out.print("Exporting: " + tableName);
-				exportData(tableName, targetPath + "/" + tableName + ".csv", dateFormat, false); 
+				exportData(tableName, targetPath, dateFormat, false); 
 				Date end = new Date();
 				logDebug(" => it took " + (end.getTime() - start.getTime()) + " msecs");
 			}
@@ -113,6 +117,8 @@ public class ExportManager extends BaseManager{
 	private List<String> getTableList(String username) throws ClassNotFoundException, SQLException{
 		List<String> res = new ArrayList<String>();
 		
+		// TODO select user from dual to get the username
+		
 		GenericSQLReader reader = new GenericSQLReader(connection);
 		List data = reader.getData("SELECT owner, table_name FROM all_tables ORDER BY table_name");
 		if (data != null && data.size() > 0) {
@@ -145,12 +151,12 @@ public class ExportManager extends BaseManager{
 	
 	/**
 	 * Exports the data from the table to the filePath
-	 * @param table
-	 * @param filePath
+	 * @param tableName
+	 * @param targetPath
 	 * @param dateformat
 	 * @throws Exception
 	 */
-	public void exportData(String table, String filePath, String dateformat, boolean singleTableExport) throws Exception {
+	public void exportData(String tableName, String targetPath, String dateformat, boolean singleTableExport) throws Exception {
 		BufferedWriter writer = null;
 		ResultSetMetaData metaData = null;
 
@@ -160,13 +166,13 @@ public class ExportManager extends BaseManager{
 			GenericSQLReader reader = new GenericSQLReader(connection);
 
 			// Trying to set an order, to be able to compare exported files
-			List data = reader.getData("SELECT * FROM " + table + " ORDER BY 1");
+			List data = reader.getData("SELECT * FROM " + tableName + " ORDER BY 1");
 
 			if (data != null && data.size() > 0) {
-				metaData = reader.getTableMetaData(table);
+				metaData = reader.getTableMetaData(tableName);
 				int columnCount = metaData.getColumnCount();
 
-				writer = new BufferedWriter(new FileWriter(filePath));
+				writer = new BufferedWriter(new FileWriter(targetPath  + "/" + tableName + ".csv"));
 
 				for (int rowIndex = 0; rowIndex < data.size(); rowIndex++) {
 					Map row = (Map) data.get(rowIndex);
@@ -179,7 +185,7 @@ public class ExportManager extends BaseManager{
 
 						if ( colType.equals("oracle.jdbc.OracleClob") ) {
 							if(value != null){
-								value = handleClob((CLOB) value, rowIndex, colIndex);
+								value = handleClob((CLOB) value, rowIndex, colIndex, targetPath);
 							}
 						} 
 						else if (colType.equals("oracle.sql.TIMESTAMP")) {
@@ -207,9 +213,9 @@ public class ExportManager extends BaseManager{
 		}
 	}
 
-	private String handleClob(CLOB value, int rowIndex, int colIndex) throws Exception {
+	private String handleClob(CLOB value, int rowIndex, int colIndex, String targetPath) throws Exception {
 		String colValue = "clobdata-r" + rowIndex + "c" + colIndex + ".txt";
-		File clobDataFile = new File(colValue);
+		File clobDataFile = new File(targetPath+"/"+colValue);
 
 		InputStream in = null;
 		OutputStream out = null;
