@@ -20,6 +20,7 @@ import java.util.Map;
 import com.truecool.sql.GenericSQLReader;
 import com.truecool.utils.StringUtils;
 
+import oracle.sql.BLOB;
 import oracle.sql.CLOB;
 import oracle.sql.TIMESTAMP;
 
@@ -194,7 +195,13 @@ public class ExportManager extends BaseManager{
 								value = handleTimeStamp(ts.timestampValue(),dateformat);
 							}
 						}
-
+						else if(colType.equals("oracle.jdbc.OracleBlob")) {
+							if(value != null){
+								value = handleBlob((BLOB) value, rowIndex, colIndex, targetPath);
+							}
+						}
+						
+						
 						writer.write((value == null ? "NULL" : StringUtils.encodeString(value.toString()) ));
 						writer.write((colIndex < columnCount - 1 ? "," : ""));
 					}
@@ -241,6 +248,30 @@ public class ExportManager extends BaseManager{
 		}
 
 		return "CLOB=" + colValue;
+	}
+	
+	private String handleBlob(BLOB value, int rowIndex, int colIndex, String targetPath) throws Exception {
+		String colValue = "blobdata-r" + rowIndex + "c" + colIndex + ".txt";
+		File clobDataFile = new File(targetPath+"/"+colValue);
+
+		InputStream in = null;
+		OutputStream out = null;
+
+		try {
+			byte[] bdata = value.getBytes(1, (int) value.length());
+			out = new FileOutputStream(clobDataFile);
+			out.write(bdata);
+		} finally {
+			if (in != null) {
+				in.close();
+			}
+			if (out != null) {
+				out.flush();
+				out.close();
+			}
+		}
+
+		return "BLOB=" + colValue;
 	}
 
 	private String handleTimeStamp(Timestamp date, String dateformat) {

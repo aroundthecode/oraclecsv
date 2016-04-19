@@ -2,11 +2,13 @@ package com.truecool.managers;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -119,8 +121,11 @@ public class ConnectionManager {
 	}
 
 	public void handleLine(String table, String line, String dateformat, String filePath) throws Exception {
-		String sql = prepareSql( table, line);
-		PreparedStatement statement = prepareStatement(sql, line, dateformat, filePath);
+		String sql;
+		PreparedStatement statement;
+		sql = prepareSql(table, line);
+		statement = prepareStatement(sql, line, dateformat, filePath);
+		
 		statement.execute();
 		statement.cancel();
 		statement.close();
@@ -137,7 +142,6 @@ public class ConnectionManager {
 			element = StringUtils.decodeString(element);
 			
 			String type = colTypes[index-1];
-//			System.out.println(type + " - " + element );
 			
 			if (element.equals("NULL"))
 				statement.setString(index, null);
@@ -155,29 +159,53 @@ public class ConnectionManager {
 				}
 				else{
 					statement.setTimestamp(index, null);
-				}
-					
+				}	
 			} 
 			else if ( type.equals("oracle.jdbc.OracleClob") ) {
-				if(element!=null && !element.equalsIgnoreCase("null")){
-				String fileName = element.substring(5);
-				File file = new File(filePath+"/"+fileName);
-				file.deleteOnExit();
-				InputStream fis = new FileInputStream(file);
-				statement.setAsciiStream(index, fis, (int) file.length());
-				}
-				else{
-					statement.setAsciiStream(index, null, 0);
-				}
+				handleClob(filePath, statement, index, element);
+			}
+			else if ( type.equals("oracle.jdbc.OracleBlob") ) {
+				handleBlob(filePath, statement, index, element);
 			}
 			else{
 				statement.setString(index, element);
 			}
 
+			System.out.println(type + " - " + element);
+
 			index++;
 		}
+		System.out.println(sql+"\n");		
 
 		return statement;
+	}
+
+	private void handleClob(String filePath, PreparedStatement statement, int index, String element)
+			throws FileNotFoundException, SQLException {
+		if(element!=null && !element.equalsIgnoreCase("null")){
+			String fileName = element.substring(5);
+			File file = new File(filePath+"/"+fileName);
+//				file.deleteOnExit();
+			InputStream fis = new FileInputStream(file);
+			statement.setAsciiStream(index, fis, (int)file.length());
+		}
+		else{
+			statement.setAsciiStream(index, null, 0);
+		}
+	}
+	
+	private void handleBlob(String filePath, PreparedStatement statement, int index, String element)
+			throws FileNotFoundException, SQLException {
+		if(element!=null && !element.equalsIgnoreCase("null")){
+			String fileName = element.substring(5);
+			File file = new File(filePath+"/"+fileName);
+//				file.deleteOnExit();
+			InputStream fis = new FileInputStream(file);
+			statement.setBinaryStream(index, fis, (int)file.length());
+		}
+		else{
+			statement.setBinaryStream(index, null, 0);
+		}
 	}
 
 	public void performTruncate(String table ) throws SQLException {

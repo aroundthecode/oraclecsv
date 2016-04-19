@@ -1,5 +1,6 @@
 package com.truecool.managers;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -20,16 +21,19 @@ public class ManagerTest {
 	private static final String SOURCE_DB_URL = "jdbc:oracle:thin:FP_MYENVLOC/vagrant@192.168.2.10:1521:XE";
 	private static final String WORK_PATH = "target/DBexport";
 	
+
 	@Test
 	public void testExportAndLoadData() {
 		// first export
-		try {
+		/*try {
 			ExportManager exportManager = new ExportManager(new OracleDriver(), SOURCE_DB_URL);
 			exportManager.exportData(WORK_PATH, DATE_FORMAT);
 		} catch (Exception e){
 			e.printStackTrace();
 			Assert.fail("Error exporting DB: " + e.getMessage());
-		}
+		}*/
+		
+		
 		try {
 			LoaderManager loaderManager = new LoaderManager(new OracleDriver(), SOURCE_DB_URL);
 			loaderManager.loadData(WORK_PATH, true, DATE_FORMAT); 
@@ -38,6 +42,7 @@ public class ManagerTest {
 			Assert.fail("Error loading DB: " + e.getMessage());
 		}
 		
+/*
 		// second export
 		try {
 			ExportManager exportManager = new ExportManager(new OracleDriver(), SOURCE_DB_URL);
@@ -69,7 +74,8 @@ public class ManagerTest {
 				e.printStackTrace();
 				Assert.fail("Error comparing files: " + e.getMessage());
 			}
-		}
+		} */
+
 	}
 	
 	/**
