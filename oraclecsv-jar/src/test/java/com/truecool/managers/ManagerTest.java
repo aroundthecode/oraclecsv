@@ -1,15 +1,13 @@
 package com.truecool.managers;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -21,17 +19,18 @@ public class ManagerTest {
 	private static final String SOURCE_DB_URL = "jdbc:oracle:thin:FP_MYENVLOC/vagrant@192.168.2.10:1521:XE";
 	private static final String WORK_PATH = "target/DBexport";
 	
+	private static final Logger logger = Logger.getLogger(ManagerTest.class);
 
 	@Test
 	public void testExportAndLoadData() {
 		// first export
-		/*try {
+		try {
 			ExportManager exportManager = new ExportManager(new OracleDriver(), SOURCE_DB_URL);
 			exportManager.exportData(WORK_PATH, DATE_FORMAT);
 		} catch (Exception e){
 			e.printStackTrace();
 			Assert.fail("Error exporting DB: " + e.getMessage());
-		}*/
+		}
 		
 		
 		try {
@@ -42,7 +41,7 @@ public class ManagerTest {
 			Assert.fail("Error loading DB: " + e.getMessage());
 		}
 		
-/*
+
 		// second export
 		try {
 			ExportManager exportManager = new ExportManager(new OracleDriver(), SOURCE_DB_URL);
@@ -55,18 +54,18 @@ public class ManagerTest {
 		// check that the files of the second export are equals to the files of the first
 		// since the relation tables cannot be ordered by the ID of the table, if two csv differ in content
 		// the size is kept as only feature to check
-		System.out.println("Comparing the two exports");
+		logger.debug("Comparing the two exports");
 		for (String fileName : LoaderManager.fileList(WORK_PATH+"bis")) {
 			String sPath1 = WORK_PATH+"/"+fileName;
 			String sPath2 = WORK_PATH+"bis" +"/"+fileName;
-			System.out.println(sPath1 + " <-> " + sPath2);
+			logger.debug(sPath1 + " <-> " + sPath2);
 			
 			Path path1 = Paths.get(sPath1);
 			Path path2 = Paths.get(sPath2);
 			
 			try {
 				if (!sameContent(path1.toAbsolutePath(), path2.toAbsolutePath()))
-					System.out.println("   WARNING the two files do not have the same content");
+					logger.warn("   WARNING the two files do not have the same content");
 				Assert.assertTrue("Files " + sPath1 + " and " + sPath2 + 
 					" do not have even the same size ", 
 					sameSize(path1, path2));
@@ -74,7 +73,7 @@ public class ManagerTest {
 				e.printStackTrace();
 				Assert.fail("Error comparing files: " + e.getMessage());
 			}
-		} */
+		} 
 
 	}
 	

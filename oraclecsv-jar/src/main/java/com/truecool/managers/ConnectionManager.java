@@ -171,11 +171,11 @@ public class ConnectionManager {
 				statement.setString(index, element);
 			}
 
-			System.out.println(type + " - " + element);
+//			System.out.println(type + " - " + element);
 
 			index++;
 		}
-		System.out.println(sql+"\n");		
+//		System.out.println(sql+"\n");		
 
 		return statement;
 	}
@@ -187,7 +187,7 @@ public class ConnectionManager {
 			File file = new File(filePath+"/"+fileName);
 //				file.deleteOnExit();
 			InputStream fis = new FileInputStream(file);
-			statement.setAsciiStream(index, fis, (int)file.length());
+			statement.setAsciiStream(index, fis);
 		}
 		else{
 			statement.setAsciiStream(index, null, 0);
@@ -201,10 +201,10 @@ public class ConnectionManager {
 			File file = new File(filePath+"/"+fileName);
 //				file.deleteOnExit();
 			InputStream fis = new FileInputStream(file);
-			statement.setBinaryStream(index, fis, (int)file.length());
+			statement.setBlob(index, fis);
 		}
 		else{
-			statement.setBinaryStream(index, null, 0);
+			statement.setBlob(index, null, 0);
 		}
 	}
 

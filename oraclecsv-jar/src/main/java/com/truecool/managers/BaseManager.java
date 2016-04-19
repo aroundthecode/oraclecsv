@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
 
+import org.apache.log4j.Logger;
+
 /**
  * Common parts of the export and load managers.
  * Can be both used passing driver and url or directly a connection.
@@ -19,6 +21,7 @@ public abstract class BaseManager {
 	protected Driver driver;
 	protected String url;
 	
+	private static final Logger logger = Logger.getLogger(BaseManager.class);
 
 	/**
 	 * Constructor with driver and url, in case a connection is not provided.
@@ -75,14 +78,13 @@ public abstract class BaseManager {
 	}
 	
 	protected void logDebug(String msg){
-		System.out.println(msg);
+		logger.debug(msg);
 	}
 	protected void logError(String msg){
-		System.err.println(msg);
+		logger.error(msg);
 	}
 	protected void logError(String msg, Exception e){
-		System.err.println(msg);
-		e.printStackTrace();
+		logger.error(msg, e);
 	}
 
 

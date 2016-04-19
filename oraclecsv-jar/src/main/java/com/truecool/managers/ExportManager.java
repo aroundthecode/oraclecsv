@@ -71,7 +71,7 @@ public class ExportManager extends BaseManager{
 			Date mainStart = new Date();
 			for (String tableName : tableList) {
 				Date start = new Date(); 
-				System.out.print("Exporting: " + tableName);
+				logDebug("Exporting: " + tableName);
 				exportData(tableName, targetPath, dateFormat, false); 
 				Date end = new Date();
 				logDebug(" => it took " + (end.getTime() - start.getTime()) + " msecs");
@@ -186,7 +186,7 @@ public class ExportManager extends BaseManager{
 
 						if ( colType.equals("oracle.jdbc.OracleClob") ) {
 							if(value != null){
-								value = handleClob((CLOB) value, rowIndex, colIndex, targetPath);
+								value = handleClob((CLOB) value, rowIndex, colIndex, targetPath, tableName);
 							}
 						} 
 						else if (colType.equals("oracle.sql.TIMESTAMP")) {
@@ -197,7 +197,7 @@ public class ExportManager extends BaseManager{
 						}
 						else if(colType.equals("oracle.jdbc.OracleBlob")) {
 							if(value != null){
-								value = handleBlob((BLOB) value, rowIndex, colIndex, targetPath);
+								value = handleBlob((BLOB) value, rowIndex, colIndex, targetPath, tableName);
 							}
 						}
 						
@@ -220,8 +220,8 @@ public class ExportManager extends BaseManager{
 		}
 	}
 
-	private String handleClob(CLOB value, int rowIndex, int colIndex, String targetPath) throws Exception {
-		String colValue = "clobdata-r" + rowIndex + "c" + colIndex + ".txt";
+	private String handleClob(CLOB value, int rowIndex, int colIndex, String targetPath, String tableName) throws Exception {
+		String colValue = "clobdata-" + tableName+ "-r" + rowIndex + "c" + colIndex + ".txt";
 		File clobDataFile = new File(targetPath+"/"+colValue);
 
 		InputStream in = null;
@@ -246,12 +246,11 @@ public class ExportManager extends BaseManager{
 			}
 
 		}
-
 		return "CLOB=" + colValue;
 	}
 	
-	private String handleBlob(BLOB value, int rowIndex, int colIndex, String targetPath) throws Exception {
-		String colValue = "blobdata-r" + rowIndex + "c" + colIndex + ".txt";
+	private String handleBlob(BLOB value, int rowIndex, int colIndex, String targetPath, String tableName) throws Exception {
+		String colValue = "blobdata-" + tableName + "-r" + rowIndex + "c" + colIndex + ".txt";
 		File clobDataFile = new File(targetPath+"/"+colValue);
 
 		InputStream in = null;
@@ -270,7 +269,6 @@ public class ExportManager extends BaseManager{
 				out.close();
 			}
 		}
-
 		return "BLOB=" + colValue;
 	}
 
