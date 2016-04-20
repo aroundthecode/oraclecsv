@@ -8,13 +8,14 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
-import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.StringTokenizer;
+
+import javax.sql.DataSource;
 
 //import oracle.jdbc.OraclePreparedStatement;
 
@@ -35,23 +36,16 @@ public class ConnectionManager {
 	protected Connection connection = null;
 	private String[] colTypes = null;
 
-	/**
-	 * Constructor used in case the connection is not provided
-	 */
 	public ConnectionManager(){	}
 	
-	/**
-	 * Constructor used in case the connection is provided
-	 * 
-	 * @param connection
-	 */
-	public ConnectionManager(Connection connection){
-		this.connection=connection;
-	}
 	
 	public void setupConnection(Driver driver, String url) throws ClassNotFoundException, SQLException {
 		DriverManager.registerDriver(driver);
 		connection = DriverManager.getConnection(url);
+	}
+	
+	public void setupConnection(DataSource dataSource) throws SQLException {
+		connection = dataSource.getConnection();
 	}
 
 	public void cleanupConnection() {
@@ -61,8 +55,7 @@ public class ConnectionManager {
 				if( getConnection().getAutoCommit() == false){
 					getConnection().commit();
 				}
-				// FIXME understand why it fails
-//				getConnection().close();
+				getConnection().close();
 			} catch (SQLException e) {
 				throw new BuildException(e);
 			}

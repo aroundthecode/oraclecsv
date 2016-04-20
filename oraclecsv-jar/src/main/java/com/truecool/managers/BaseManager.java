@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
 
-import org.apache.log4j.Logger;
+import javax.sql.DataSource;
 
 /**
  * Common parts of the export and load managers.
@@ -18,11 +18,10 @@ public abstract class BaseManager {
 	protected ConnectionManager connectionManager;
 	protected Connection connection;
 	protected String userName;
-	protected Driver driver;
-	protected String url;
+	private Driver driver;
+	private String url;
+	private DataSource dataSource; 
 	
-	private static final Logger logger = Logger.getLogger(BaseManager.class);
-
 	/**
 	 * Constructor with driver and url, in case a connection is not provided.
 	 * @param driver
@@ -40,9 +39,9 @@ public abstract class BaseManager {
 	 * @param connection
 	 * @throws Exception
 	 */
-	public BaseManager(Connection connection) throws Exception {
-		this.connection = connection;
-		this.connectionManager = new ConnectionManager(connection);
+	public BaseManager(DataSource datasource) throws Exception {
+		this.connectionManager = new ConnectionManager();
+		this.dataSource = datasource;
 	}
 
 	/**
@@ -51,7 +50,7 @@ public abstract class BaseManager {
 	protected BaseManager(){}
 
 	/**
-	 * Starts a connection to the DB (in case it wasn't provided)
+	 * Starts a connection to the DB
 	 * 
 	 * @param driver
 	 * @param url
@@ -59,32 +58,33 @@ public abstract class BaseManager {
 	 * @throws SQLException
 	 */
 	protected void startConnection() throws ClassNotFoundException, SQLException {
-		if (connection==null && url!=null){
+		if (url!=null && driver!=null){
 			connectionManager.setupConnection(driver, url);
 			connection = connectionManager.getConnection();
-			// TODO replace with query
+			// TODO replace with query (used for test purposes)
 			userName = url.substring(17, url.indexOf("/"));
-		}
+		} else if(dataSource!=null) {
+			dataSource.getConnection();
+		} else 
+			logError("Not enough parameters to start a connection");
 		
 	}
 	
 	/**
-	 * Closes a connection to the DB (in case it wasn't provided)
+	 * Closes a connection to the DB
 	 */
 	protected void closeConnection() {
-		if ( url!=null){
-			connectionManager.cleanupConnection();
-		}
+		connectionManager.cleanupConnection();
 	}
 	
 	protected void logDebug(String msg){
-		logger.debug(msg);
+		System.out.println(msg);
 	}
 	protected void logError(String msg){
-		logger.error(msg);
+		System.err.println(msg);
 	}
 	protected void logError(String msg, Exception e){
-		logger.error(msg, e);
+		System.err.println(msg);
 	}
 
 

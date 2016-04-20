@@ -7,15 +7,17 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
+import java.sql.SQLRecoverableException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.sql.DataSource;
 
 import com.truecool.sql.GenericSQLReader;
 
@@ -28,7 +30,11 @@ import com.truecool.sql.GenericSQLReader;
 public class LoaderManager extends BaseManager{
 
 	private static final String CONSTRAINT_QRY = "select u.table_name, c.constraint_name from user_constraints c, user_tables u where c.table_name = u.table_name";
-
+	
+	/** the max number of accepted constraint loop */
+	private static final int MAX_CONSTRAINT_LOOP = 2;
+	
+	
 	/**
 	 * Constructor with mandatory fields
 	 * 
@@ -40,8 +46,8 @@ public class LoaderManager extends BaseManager{
 		super(driver, url);
 	}
 	
-	public LoaderManager(Connection connection) throws Exception{
-		super(connection);
+	public LoaderManager(DataSource dataSource) throws Exception{
+		super(dataSource);
 	}
 
 	
@@ -61,7 +67,6 @@ public class LoaderManager extends BaseManager{
 	 * @throws Exception
 	 */
 	public void loadData(String filePath, boolean truncate, String dateFormat) throws Exception {
-		startConnection();
 		try {
 			List<String> fileList = fileList(filePath);
 			Date mainStart = new Date();
@@ -72,7 +77,9 @@ public class LoaderManager extends BaseManager{
 					String tableName = fileName.replace(".csv", "");
 					Date start = new Date(); 
 					logDebug("Importing: " + tableName);
+					startConnection();
 					loadData(tableName, filePath, true, dateFormat); 
+					closeConnection();
 					Date end = new Date();
 					logDebug(" => it took " + (end.getTime() - start.getTime()) + " msecs");
 				}
@@ -87,13 +94,14 @@ public class LoaderManager extends BaseManager{
 		} catch (Exception e){
 			logError("Error loading DB: " + e.getMessage(), e);
 		}
-		closeConnection();
 	}
 	
 	/**
 	 * Enable constraints (after the load of all the table content)
+	 * @throws SQLException 
+	 * @throws ClassNotFoundException 
 	 */
-	private void enableConstraints() {
+	private void enableConstraints() throws ClassNotFoundException, SQLException {
 		logDebug("Enabling constraints: " + CONSTRAINT_QRY);
 		manageConstraints("ENABLE");
 	}
@@ -107,13 +115,17 @@ public class LoaderManager extends BaseManager{
 	 * later
 	 * 
 	 * @param cmd
+	 * @throws SQLException 
+	 * @throws ClassNotFoundException 
 	 */
-	private void manageConstraints(String cmd) {
+	private void manageConstraints(String cmd) throws ClassNotFoundException, SQLException {
+		startConnection();
+
 		GenericSQLReader reader = new GenericSQLReader(connection);
 		List data = reader.getData(CONSTRAINT_QRY);
 		
 		int n=1;
-		while(!data.isEmpty()){
+		while(n<= MAX_CONSTRAINT_LOOP && !data.isEmpty()){
 			logDebug("Constraint loop n " + n++);
 			for (Iterator<Object> i=data.iterator(); i.hasNext(); ) {
 				Map row = (Map) i.next();
@@ -128,19 +140,28 @@ public class LoaderManager extends BaseManager{
 	//				logDebug(sql);
 					statement.close();
 					i.remove();
+				} catch (SQLRecoverableException re) {
+					logError("SQLRecoverableException: " + re.getMessage());
+					return;
 				} catch (SQLException e) {
 					logError("  Error in executing " + cmd + " of constraint " + sql + ":\n  " + e.getMessage().replace("\n", "") );
 					logError("  Retrying when the other constraints are set\n");
 				}
 			}
 		}
+		if (!data.isEmpty())
+			logError("It was not possible to completely manage all the constraints");
+		closeConnection();
+
 		logDebug("Constraint " + cmd + " ended");
 	}
 
 	/**
 	 * Disable constraints (to load all the table content)
+	 * @throws SQLException 
+	 * @throws ClassNotFoundException 
 	 */
-	private void disableConstraints() {
+	private void disableConstraints() throws ClassNotFoundException, SQLException {
 		logDebug("Disabling constraints: " + CONSTRAINT_QRY);
 		manageConstraints("DISABLE");
 	}

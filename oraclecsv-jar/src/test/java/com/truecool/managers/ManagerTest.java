@@ -23,6 +23,7 @@ public class ManagerTest {
 
 	@Test
 	public void testExportAndLoadData() {
+		
 		// first export
 		try {
 			ExportManager exportManager = new ExportManager(new OracleDriver(), SOURCE_DB_URL);
@@ -31,7 +32,6 @@ public class ManagerTest {
 			e.printStackTrace();
 			Assert.fail("Error exporting DB: " + e.getMessage());
 		}
-		
 		
 		try {
 			LoaderManager loaderManager = new LoaderManager(new OracleDriver(), SOURCE_DB_URL);
@@ -74,7 +74,6 @@ public class ManagerTest {
 				Assert.fail("Error comparing files: " + e.getMessage());
 			}
 		} 
-
 	}
 	
 	/**

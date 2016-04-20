@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -16,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import javax.sql.DataSource;
 
 import com.truecool.sql.GenericSQLReader;
 import com.truecool.utils.StringUtils;
@@ -43,8 +44,8 @@ public class ExportManager extends BaseManager{
 		super(driver, url);
 	}
 	
-	public ExportManager(Connection connection) throws Exception{
-		super(connection);
+	public ExportManager(DataSource dataSource) throws Exception{
+		super(dataSource);
 	}
 
 	/**
