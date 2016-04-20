@@ -39,13 +39,15 @@ public class ConnectionManager {
 	public ConnectionManager(){	}
 	
 	
-	public void setupConnection(Driver driver, String url) throws ClassNotFoundException, SQLException {
+	public Connection setupConnection(Driver driver, String url) throws ClassNotFoundException, SQLException {
 		DriverManager.registerDriver(driver);
 		connection = DriverManager.getConnection(url);
+		return connection;
 	}
 	
-	public void setupConnection(DataSource dataSource) throws SQLException {
+	public Connection setupConnection(DataSource dataSource) throws SQLException {
 		connection = dataSource.getConnection();
+		return connection;
 	}
 
 	public void cleanupConnection() {

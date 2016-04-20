@@ -92,6 +92,7 @@ public class LoaderManager extends BaseManager{
 				(mainEnd.getTime() - mainStart.getTime()) + " msecs\n");
 			
 		} catch (Exception e){
+			e.printStackTrace();
 			logError("Error loading DB: " + e.getMessage(), e);
 		}
 	}

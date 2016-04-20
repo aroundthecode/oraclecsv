@@ -59,12 +59,11 @@ public abstract class BaseManager {
 	 */
 	protected void startConnection() throws ClassNotFoundException, SQLException {
 		if (url!=null && driver!=null){
-			connectionManager.setupConnection(driver, url);
-			connection = connectionManager.getConnection();
+			connection = connectionManager.setupConnection(driver, url);
 			// TODO replace with query (used for test purposes)
 			userName = url.substring(17, url.indexOf("/"));
 		} else if(dataSource!=null) {
-			dataSource.getConnection();
+			connection=connectionManager.setupConnection(dataSource);
 		} else 
 			logError("Not enough parameters to start a connection");
 		
