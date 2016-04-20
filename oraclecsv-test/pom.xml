@@ -39,7 +39,10 @@
 						<version>${project.version}</version>
 					</dependency>
 				</dependencies>
-				<executions>
+				
+				<!-- for the time being the test is disabled -->
+				<!-- TODO enable when db will be available to test -->
+				<!-- executions>
 					<execution>
 						<id>ant-test</id>
 						<phase>test</phase>
@@ -66,7 +69,7 @@
 
 						</configuration>
 					</execution>
-				</executions>
+				</executions -->
 			</plugin>
 
 		</plugins>
