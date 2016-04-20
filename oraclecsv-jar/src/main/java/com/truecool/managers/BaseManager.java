@@ -8,7 +8,7 @@ import javax.sql.DataSource;
 
 /**
  * Common parts of the export and load managers.
- * Can be both used passing driver and url or directly a connection.
+ * Can be both used passing driver and url or directly a datasource.
  * 
  * @author Alberto Lagna
  *
@@ -21,6 +21,7 @@ public abstract class BaseManager {
 	private Driver driver;
 	private String url;
 	private DataSource dataSource; 
+	private boolean isDebug=false;
 	
 	/**
 	 * Constructor with driver and url, in case a connection is not provided.
@@ -32,10 +33,11 @@ public abstract class BaseManager {
 		this.connectionManager = new ConnectionManager();
 		this.driver=driver;
 		this.url=url;
+		isDebug=true;
 	}
 	
 	/**
-	 * Constructor in case a provided connection is used.
+	 * Constructor in case a provided datasource is used.
 	 * @param connection
 	 * @throws Exception
 	 */
@@ -43,6 +45,12 @@ public abstract class BaseManager {
 		this.connectionManager = new ConnectionManager();
 		this.dataSource = datasource;
 	}
+	
+	public BaseManager(DataSource datasource, boolean isDebug) throws Exception {
+		this(datasource);
+		this.isDebug = isDebug;
+	}
+	
 
 	/**
 	 * Constructor with no fields cannot be used
@@ -77,13 +85,16 @@ public abstract class BaseManager {
 	}
 	
 	protected void logDebug(String msg){
-		System.out.println(msg);
+		if (isDebug)
+			System.out.println(msg);
 	}
 	protected void logError(String msg){
-		System.err.println(msg);
+		if (isDebug)
+			System.out.println(msg);
 	}
 	protected void logError(String msg, Exception e){
-		System.err.println(msg);
+		if (isDebug)
+			System.out.println(msg);
 	}
 
 

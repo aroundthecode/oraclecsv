@@ -50,6 +50,10 @@ public class LoaderManager extends BaseManager{
 		super(dataSource);
 	}
 
+	public LoaderManager(DataSource dataSource, boolean isDebug) throws Exception{
+		super(dataSource, isDebug);
+	}
+
 	
 	/**
 	 * Default constructor is not allowed
@@ -198,9 +202,10 @@ public class LoaderManager extends BaseManager{
 	 */
 	public void loadData(String tableName, String filePath, boolean truncate, String dateformat) throws Exception {
 		BufferedReader reader = null;
-
+		FileReader fReader = null;
 		try {
-			reader = new BufferedReader(new FileReader(filePath  + "/" + tableName + ".csv"));
+			fReader = new FileReader(filePath  + "/" + tableName + ".csv");
+			reader = new BufferedReader(fReader);
 
 			if (truncate) {
 				connectionManager.performTruncate(tableName);
@@ -213,6 +218,7 @@ public class LoaderManager extends BaseManager{
 		} finally {
 			if (reader != null) {
 				reader.close();
+				fReader.close();
 			}
 		}
 	}
