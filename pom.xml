@@ -2,12 +2,36 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
+	<parent>
+	    <groupId>com.facilitylive</groupId>
+	    <artifactId>facilitylive-base</artifactId>
+	    <version>3.3.0</version>
+	</parent>
+
 	<groupId>com.truecool.ant</groupId>
 	<artifactId>oraclecsv</artifactId>
 	<packaging>pom</packaging>
 	<version>1.0.1-SNAPSHOT</version>
 	
-	<name>oraclecvs</name>
+	<name>Oracle CSV - ${project.groupId}:${project.artifactId}:${project.packaging}</name>
+	<description>Oracle CVS import - export</description>
+
+	<scm>
+		 <connection>scm:git:ssh://${git.user}@${git.baseurl}/fconn/oraclecsv.git</connection>
+		 <url>https://${git.weburl}/projects/FCONN/repos/oraclecsv/browse</url>
+		 <developerConnection>scm:git:ssh://${git.user}@${git.baseurl}/fconn/oraclecsv.git</developerConnection>
+	</scm>
+
+	<ciManagement>
+	    <system>Bamboo</system>
+	    <url>https://${bamboo.baseurl}/browse/FLCORE-ORACLECSV</url>
+	</ciManagement>
+
+	<issueManagement>
+	    <system>JIRA</system>
+	    <url>https://${jira.baseurl}/browse/FAC</url>
+	</issueManagement>
+
 
 	<modules>
 		<module>oraclecsv-jar</module>
