@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.truecool.ant</groupId>
 		<artifactId>oraclecsv</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>1.0.1</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -54,13 +54,11 @@
 								<taskdef name="export" classname="com.truecool.ant.OracleExportTask" />
 								
 								<echo>Export</echo>
-								<export dbmsuri="jdbc:oracle:thin:${db.user}/${db.pass}@${db.host}:${db.port}:${db.schema}"
-									table="${db.table}" filepath="${project.build.directory}/export.txt" 
+								<export dbmsuri="jdbc:oracle:thin:${db.user}/${db.pass}@${db.host}:${db.port}:${db.schema}" table="${db.table}" filepath="${project.build.directory}/export.txt" 
 									dateformat="${dateformat}" />
 									
 								<echo>Loader</echo>
-								<loader dbmsuri="jdbc:oracle:thin:${db.user}/${db.pass}@${db.host}:${db.port}:${db.schema}"
-									table="${db.table}" truncate="${db.truncate}" filepath="${project.build.directory}/export.txt"
+								<loader dbmsuri="jdbc:oracle:thin:${db.user}/${db.pass}@${db.host}:${db.port}:${db.schema}" table="${db.table}" truncate="${db.truncate}" filepath="${project.build.directory}/export.txt"
 									dateformat="${dateformat}" />
 							</tasks>
 
