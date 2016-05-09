@@ -32,34 +32,10 @@ import oracle.jdbc.driver.OracleDriver;
 public class LoaderManager extends BaseManager{
 
 	private static final String CONSTRAINT_QRY = "select u.table_name, c.constraint_name from user_constraints c, user_tables u where c.table_name = u.table_name";
-	private static final String DATE_FORMAT = "MM/dd/yyyy hh:mm:ss a";
-	//private static final String SOURCE_DB_URL = "jdbc:oracle:thin:FP_MYENVLOC/vagrant@192.168.2.10:1521:XE";
-	private static final String WORK_PATH = "target/DBexport";
 	
 	/** the max number of accepted constraint loop */
 	private static final int MAX_CONSTRAINT_LOOP = 2;
-	
-	/**
-	 * Used from command line to export a DB
-	 * @param args
-	 */
-	public static void main(String[] args) {
 		
-		if (args.length==0)
-			System.err.println("JDBC string is mandatory, in the following format: jdbc:oracle:thin:<schema>/<password>@<host>:<port>:<sid>");
-			System.exit(1);
-		try {
-			String jdbcUrl = args[0];
-			System.out.println("Exporting DB " +jdbcUrl);
-			ExportManager exportManager = new ExportManager(new OracleDriver(), jdbcUrl);
-			exportManager.exportData(WORK_PATH, DATE_FORMAT);
-			System.out.println("DB successfully exported to " + WORK_PATH);
-		} catch (Exception e){
-			System.err.println("Error exporting DB: " + e.getMessage());
-			e.printStackTrace();
-		}
-	}
-	
 	/**
 	 * Constructor with mandatory fields
 	 * 

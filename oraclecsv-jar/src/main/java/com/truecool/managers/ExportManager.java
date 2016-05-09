@@ -21,6 +21,7 @@ import javax.sql.DataSource;
 import com.truecool.sql.GenericSQLReader;
 import com.truecool.utils.StringUtils;
 
+import oracle.jdbc.driver.OracleDriver;
 import oracle.sql.BLOB;
 import oracle.sql.CLOB;
 import oracle.sql.TIMESTAMP;
@@ -33,6 +34,30 @@ import oracle.sql.TIMESTAMP;
  */
 public class ExportManager extends BaseManager{
 
+	private static final String DATE_FORMAT = "MM/dd/yyyy hh:mm:ss a";
+	//private static final String SOURCE_DB_URL = "jdbc:oracle:thin:FP_MYENVLOC/vagrant@192.168.2.10:1521:XE";
+	private static final String WORK_PATH = "target/DBexport";
+	
+	/**
+	 * Used from command line to export a DB
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		
+		if (args.length==0)
+			System.err.println("JDBC string is mandatory, in the following format: jdbc:oracle:thin:<schema>/<password>@<host>:<port>:<sid>");
+			System.exit(1);
+		try {
+			String jdbcUrl = args[0];
+			System.out.println("Exporting DB " +jdbcUrl);
+			ExportManager exportManager = new ExportManager(new OracleDriver(), jdbcUrl);
+			exportManager.exportData(WORK_PATH, DATE_FORMAT);
+			System.out.println("DB successfully exported to " + WORK_PATH);
+		} catch (Exception e){
+			System.err.println("Error exporting DB: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Constructor with mandatory fields
